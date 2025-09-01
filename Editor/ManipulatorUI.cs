@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using OpalStudio.SceneManipulator.Editor.Services;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace OpalStudio.SceneManipulator
+namespace OpalStudio.SceneManipulator.Editor
 {
       public sealed class ManipulatorUI
       {
@@ -14,7 +16,7 @@ namespace OpalStudio.SceneManipulator
             public event Action OnMoveToOriginClicked;
 
             // Events for alignment
-            public event Action<Services.AlignmentService.Axis, Services.AlignmentService.Target> OnAlignClicked;
+            public event Action<AlignmentService.Axis, AlignmentService.Target> OnAlignClicked;
 
             // Events for Rotation
             public event Action<Vector3> OnSetRotationClicked;
@@ -22,12 +24,21 @@ namespace OpalStudio.SceneManipulator
             public event Action<Vector3> OnAddRotationClicked;
             public event Action OnRandomizeYRotationClicked;
 
-            // Events for Arrangement and Utilities
+            // Events for Arrangement
             public event Action<Vector3> OnSpacingChanged;
             public event Action<Vector3> OnArrangeInLineClicked;
             public event Action OnArrangeInGridClicked;
             public event Action OnArrangeInCircleClicked;
             public event Action OnArrangeRandomlyClicked;
+
+            // Events for Snapping
+            public event Action<bool> OnSnapToGroundAdvancedClicked;
+            public event Action<SnapService.SnapDirection, bool> OnSnapToBoundsClicked;
+            public event Action<float> OnSnapToGridClicked;
+            public event Action OnSnapBetweenClicked;
+            public event Action<float> OnStackObjectsClicked;
+
+            // Events for Utilities
             public event Action OnDuplicateClicked;
             public event Action OnDeleteClicked;
             public event Action OnGroupClicked;
@@ -44,6 +55,7 @@ namespace OpalStudio.SceneManipulator
                   CreateAlignmentSection();
                   CreateRotationSection();
                   CreateArrangementSection();
+                  CreateSnapSection();
                   CreateMeasurementSection();
                   CreateUtilitySection();
 
@@ -82,40 +94,49 @@ namespace OpalStudio.SceneManipulator
                   VisualElement rowX = CreateButtonRow();
                   rowX.Add(new Label("X") { style = { width = 12 } });
 
-                  rowX.Add(CreateIconButton("d_align_horizontally_left_active", "Align Min X",
-                              () => OnAlignClicked?.Invoke(Services.AlignmentService.Axis.X, Services.AlignmentService.Target.Min)));
+                  rowX.Add(CreateAlignmentPreviewButton("d_align_horizontally_left_active", "Align Min X",
+                              () => OnAlignClicked?.Invoke(AlignmentService.Axis.X, AlignmentService.Target.Min),
+                              static objects => PreviewService.PreviewAlign(objects, AlignmentService.Axis.X, AlignmentService.Target.Min)));
 
-                  rowX.Add(CreateIconButton("d_align_horizontally_center_active", "Align Center X",
-                              () => OnAlignClicked?.Invoke(Services.AlignmentService.Axis.X, Services.AlignmentService.Target.Center)));
+                  rowX.Add(CreateAlignmentPreviewButton("d_align_horizontally_center_active", "Align Center X",
+                              () => OnAlignClicked?.Invoke(AlignmentService.Axis.X, AlignmentService.Target.Center),
+                              static objects => PreviewService.PreviewAlign(objects, AlignmentService.Axis.X, AlignmentService.Target.Center)));
 
-                  rowX.Add(CreateIconButton("d_align_horizontally_right_active", "Align Max X",
-                              () => OnAlignClicked?.Invoke(Services.AlignmentService.Axis.X, Services.AlignmentService.Target.Max)));
+                  rowX.Add(CreateAlignmentPreviewButton("d_align_horizontally_right_active", "Align Max X",
+                              () => OnAlignClicked?.Invoke(AlignmentService.Axis.X, AlignmentService.Target.Max),
+                              static objects => PreviewService.PreviewAlign(objects, AlignmentService.Axis.X, AlignmentService.Target.Max)));
                   section.Add(rowX);
 
                   VisualElement rowY = CreateButtonRow();
                   rowY.Add(new Label("Y") { style = { width = 12 } });
 
-                  rowY.Add(CreateIconButton("d_align_vertically_bottom_active", "Align Min Y",
-                              () => OnAlignClicked?.Invoke(Services.AlignmentService.Axis.Y, Services.AlignmentService.Target.Min)));
+                  rowY.Add(CreateAlignmentPreviewButton("d_align_vertically_bottom_active", "Align Min Y",
+                              () => OnAlignClicked?.Invoke(AlignmentService.Axis.Y, AlignmentService.Target.Min),
+                              static objects => PreviewService.PreviewAlign(objects, AlignmentService.Axis.Y, AlignmentService.Target.Min)));
 
-                  rowY.Add(CreateIconButton("d_align_vertically_center_active", "Align Center Y",
-                              () => OnAlignClicked?.Invoke(Services.AlignmentService.Axis.Y, Services.AlignmentService.Target.Center)));
+                  rowY.Add(CreateAlignmentPreviewButton("d_align_vertically_center_active", "Align Center Y",
+                              () => OnAlignClicked?.Invoke(AlignmentService.Axis.Y, AlignmentService.Target.Center),
+                              static objects => PreviewService.PreviewAlign(objects, AlignmentService.Axis.Y, AlignmentService.Target.Center)));
 
-                  rowY.Add(CreateIconButton("d_align_vertically_top_active", "Align Max Y",
-                              () => OnAlignClicked?.Invoke(Services.AlignmentService.Axis.Y, Services.AlignmentService.Target.Max)));
+                  rowY.Add(CreateAlignmentPreviewButton("d_align_vertically_top_active", "Align Max Y",
+                              () => OnAlignClicked?.Invoke(AlignmentService.Axis.Y, AlignmentService.Target.Max),
+                              static objects => PreviewService.PreviewAlign(objects, AlignmentService.Axis.Y, AlignmentService.Target.Max)));
                   section.Add(rowY);
 
                   VisualElement rowZ = CreateButtonRow();
                   rowZ.Add(new Label("Z") { style = { width = 12 } });
 
-                  rowZ.Add(CreateIconButton("d_align_horizontally_left_active", "Align Min Z (Forward)",
-                              () => OnAlignClicked?.Invoke(Services.AlignmentService.Axis.Z, Services.AlignmentService.Target.Min)));
+                  rowZ.Add(CreateAlignmentPreviewButton("d_align_horizontally_left_active", "Align Min Z (Forward)",
+                              () => OnAlignClicked?.Invoke(AlignmentService.Axis.Z, AlignmentService.Target.Min),
+                              static objects => PreviewService.PreviewAlign(objects, AlignmentService.Axis.Z, AlignmentService.Target.Min)));
 
-                  rowZ.Add(CreateIconButton("d_align_horizontally_center_active", "Align Center Z",
-                              () => OnAlignClicked?.Invoke(Services.AlignmentService.Axis.Z, Services.AlignmentService.Target.Center)));
+                  rowZ.Add(CreateAlignmentPreviewButton("d_align_horizontally_center_active", "Align Center Z",
+                              () => OnAlignClicked?.Invoke(AlignmentService.Axis.Z, AlignmentService.Target.Center),
+                              static objects => PreviewService.PreviewAlign(objects, AlignmentService.Axis.Z, AlignmentService.Target.Center)));
 
-                  rowZ.Add(CreateIconButton("d_align_horizontally_right_active", "Align Max Z (Back)",
-                              () => OnAlignClicked?.Invoke(Services.AlignmentService.Axis.Z, Services.AlignmentService.Target.Max)));
+                  rowZ.Add(CreateAlignmentPreviewButton("d_align_horizontally_right_active", "Align Max Z (Back)",
+                              () => OnAlignClicked?.Invoke(AlignmentService.Axis.Z, AlignmentService.Target.Max),
+                              static objects => PreviewService.PreviewAlign(objects, AlignmentService.Axis.Z, AlignmentService.Target.Max)));
                   section.Add(rowZ);
             }
 
@@ -134,8 +155,13 @@ namespace OpalStudio.SceneManipulator
                   section.Add(quickRotRow1);
 
                   VisualElement quickRotRow2 = CreateButtonRow();
-                  quickRotRow2.Add(CreateButton("+90° Y", "Add 90 degrees to Y rotation", () => OnAddRotationClicked?.Invoke(new Vector3(0, 90, 0))));
-                  quickRotRow2.Add(CreateButton("-90° Y", "Subtract 90 degrees from Y rotation", () => OnAddRotationClicked?.Invoke(new Vector3(0, -90, 0))));
+
+                  quickRotRow2.Add(CreateRotationPreviewButton("+90° Y", "Add 90 degrees to Y rotation", () => OnAddRotationClicked?.Invoke(new Vector3(0, 90, 0)),
+                              static objects => PreviewService.PreviewAddRotation(objects, new Vector3(0, 90, 0))));
+
+                  quickRotRow2.Add(CreateRotationPreviewButton("-90° Y", "Subtract 90 degrees from Y rotation",
+                              () => OnAddRotationClicked?.Invoke(new Vector3(0, -90, 0)),
+                              static objects => PreviewService.PreviewAddRotation(objects, new Vector3(0, -90, 0))));
                   section.Add(quickRotRow2);
             }
 
@@ -149,22 +175,126 @@ namespace OpalStudio.SceneManipulator
                   section.Add(spacingField);
 
                   VisualElement arrangeRow1 = CreateButtonRow();
-                  arrangeRow1.Add(CreateButton("Line X", "Arrange along the X axis", () => OnArrangeInLineClicked?.Invoke(Vector3.right)));
-                  arrangeRow1.Add(CreateButton("Line Y", "Arrange along the Y axis", () => OnArrangeInLineClicked?.Invoke(Vector3.up)));
-                  arrangeRow1.Add(CreateButton("Line Z", "Arrange along the Z axis", () => OnArrangeInLineClicked?.Invoke(Vector3.forward)));
+
+                  arrangeRow1.Add(CreateArrangementPreviewButton("Line X", "Arrange along the X axis", () => OnArrangeInLineClicked?.Invoke(Vector3.right),
+                              static (objects, spacing) => PreviewService.PreviewArrangeInLine(objects, Vector3.right, spacing.magnitude)));
+
+                  arrangeRow1.Add(CreateArrangementPreviewButton("Line Y", "Arrange along the Y axis", () => OnArrangeInLineClicked?.Invoke(Vector3.up),
+                              static (objects, spacing) => PreviewService.PreviewArrangeInLine(objects, Vector3.up, spacing.magnitude)));
+
+                  arrangeRow1.Add(CreateArrangementPreviewButton("Line Z", "Arrange along the Z axis", () => OnArrangeInLineClicked?.Invoke(Vector3.forward),
+                              static (objects, spacing) => PreviewService.PreviewArrangeInLine(objects, Vector3.forward, spacing.magnitude)));
                   section.Add(arrangeRow1);
 
                   VisualElement arrangeRow2 = CreateButtonRow();
-                  arrangeRow2.Add(CreateButton("Grid", "Arrange in a grid on the XZ plane", () => OnArrangeInGridClicked?.Invoke()));
-                  arrangeRow2.Add(CreateButton("Circle", "Arrange in a circle on the XZ plane", () => OnArrangeInCircleClicked?.Invoke()));
+
+                  arrangeRow2.Add(CreateArrangementPreviewButton("Grid", "Arrange in a grid on the XZ plane", () => OnArrangeInGridClicked?.Invoke(),
+                              static (objects, spacing) => PreviewService.PreviewArrangeInGrid(objects, spacing)));
+
+                  arrangeRow2.Add(CreateArrangementPreviewButton("Circle", "Arrange in a circle on the XZ plane", () => OnArrangeInCircleClicked?.Invoke(),
+                              static (objects, spacing) => PreviewService.PreviewArrangeInCircle(objects, spacing.magnitude)));
                   arrangeRow2.Add(CreateButton("Random", "Arrange randomly around the first object", () => OnArrangeRandomlyClicked?.Invoke()));
                   section.Add(arrangeRow2);
+            }
+
+            private void CreateSnapSection()
+            {
+                  Foldout section = CreateSectionFoldout("Snap", false);
+                  _root.Add(section);
+
+                  VisualElement groundRow = CreateButtonRow();
+
+                  groundRow.Add(CreateButton("Ground", "Snap objects to ground below (takes object height into account)",
+                              () => OnSnapToGroundAdvancedClicked?.Invoke(false)));
+                  groundRow.Add(CreateButton("Ground+Align", "Snap to ground and align to surface normal", () => OnSnapToGroundAdvancedClicked?.Invoke(true)));
+                  section.Add(groundRow);
+
+                  VisualElement gridRow = CreateButtonRow();
+
+                  var gridField = new FloatField("Grid Size")
+                  {
+                              value = 1f, tooltip = "Grid size for snapping (1 = 1 unity unit)",
+                              style =
+                              {
+                                          flexGrow = 1
+                              }
+                  };
+                  gridRow.Add(gridField);
+                  gridRow.Add(CreateButton("Snap", "Snap positions to grid points", () => OnSnapToGridClicked?.Invoke(gridField.value)));
+                  section.Add(gridRow);
+
+                  var boundsLabel = new Label("Snap to Bounds (First = Reference):") { style = { marginTop = 5, fontSize = 11 } };
+                  section.Add(boundsLabel);
+
+                  VisualElement boundsRow1 = CreateButtonRow();
+                  boundsRow1.Add(CreateButton("↓", "Snap below reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Down, false)));
+                  boundsRow1.Add(CreateButton("↑", "Snap above reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Up, false)));
+                  boundsRow1.Add(CreateButton("←", "Snap to left of reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Left, false)));
+                  boundsRow1.Add(CreateButton("→", "Snap to right of reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Right, false)));
+                  section.Add(boundsRow1);
+
+                  VisualElement boundsRow2 = CreateButtonRow();
+                  boundsRow2.Add(CreateButton("Forward", "Snap in front of reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Forward, false)));
+                  boundsRow2.Add(CreateButton("Back", "Snap behind reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Back, false)));
+                  section.Add(boundsRow2);
+
+                  var surfaceLabel = new Label("Snap to Surface (Touching):") { style = { marginTop = 5, fontSize = 11 } };
+                  section.Add(surfaceLabel);
+
+                  VisualElement surfaceRow = CreateButtonRow();
+                  surfaceRow.Add(CreateButton("↓ Touch", "Snap below with faces touching", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Down, true)));
+                  surfaceRow.Add(CreateButton("↑ Touch", "Snap above with faces touching", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Up, true)));
+
+                  surfaceRow.Add(CreateButton("→ Touch", "Snap to right with faces touching",
+                              () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Right, true)));
+                  surfaceRow.Add(CreateButton("← Touch", "Snap to left with faces touching", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Left, true)));
+                  section.Add(surfaceRow);
+
+                  VisualElement otherRow = CreateButtonRow();
+                  otherRow.Add(CreateButton("Between", "Place objects between first two selected (needs 3+ objects)", () => OnSnapBetweenClicked?.Invoke()));
+
+                  var stackField = new FloatField("Stack")
+                  {
+                              value = 0f, tooltip = "Stack objects vertically with padding",
+                              style =
+                              {
+                                          flexGrow = 0.7f
+                              }
+                  };
+                  otherRow.Add(stackField);
+                  otherRow.Add(CreateButton("Stack", "Stack selected objects (first = base)", () => OnStackObjectsClicked?.Invoke(stackField.value)));
+                  section.Add(otherRow);
             }
 
             private void CreateMeasurementSection()
             {
                   Foldout section = CreateSectionFoldout("Measurement", false);
                   _root.Add(section);
+
+                  VisualElement toggleRow = CreateButtonRow();
+
+                  var gizmosToggle = new Toggle("Show Distance Gizmos")
+                  {
+                              value = VisualizationService.ShowDistanceGizmos,
+                              tooltip = "Display distance measurements between objects in the scene view"
+                  };
+
+                  gizmosToggle.RegisterValueChangedCallback(static evt =>
+                  {
+                        VisualizationService.ShowDistanceGizmos = evt.newValue;
+
+                        if (evt.newValue)
+                        {
+                              GameObject[] selectedObjects = Selection.gameObjects;
+                              VisualizationService.UpdateConnections(selectedObjects);
+                        }
+                        else
+                        {
+                              VisualizationService.ClearConnections();
+                        }
+                  });
+                  toggleRow.Add(gizmosToggle);
+                  section.Add(toggleRow);
 
                   _measurementInfoLabel = new Label("Select at least 2 objects.") { style = { whiteSpace = WhiteSpace.Normal } };
                   section.Add(_measurementInfoLabel);
@@ -187,14 +317,72 @@ namespace OpalStudio.SceneManipulator
                   return new Button(onClick) { text = text, tooltip = tooltip, style = { flexGrow = 1, marginLeft = 1, marginRight = 1 } };
             }
 
-            private static Button CreateIconButton(string iconName, string tooltip, Action onClick)
+            private static Button CreateAlignmentPreviewButton(string iconName, string tooltip, Action onClick, Action<IReadOnlyList<GameObject>> onPreview)
             {
                   var btn = new Button(onClick)
                   {
-                              tooltip = tooltip,
+                              tooltip = tooltip + " (Hover to preview)",
                               style = { flexGrow = 1, marginLeft = 1, marginRight = 1 }
                   };
                   btn.Add(new Image { image = EditorGUIUtility.IconContent(iconName).image });
+
+                  btn.RegisterCallback<MouseEnterEvent>(_ =>
+                  {
+                        GameObject[] selectedObjects = Selection.gameObjects;
+
+                        if (selectedObjects is { Length: > 1 })
+                        {
+                              onPreview?.Invoke(selectedObjects);
+                        }
+                  });
+                  btn.RegisterCallback<MouseLeaveEvent>(static _ => PreviewService.CancelPreview());
+
+                  return btn;
+            }
+
+            private static Button CreateArrangementPreviewButton(string text, string tooltip, Action onClick, Action<IReadOnlyList<GameObject>, Vector3> onPreview)
+            {
+                  var btn = new Button(onClick)
+                  {
+                              text = text,
+                              tooltip = tooltip + " (Hover to preview)",
+                              style = { flexGrow = 1, marginLeft = 1, marginRight = 1 }
+                  };
+
+                  btn.RegisterCallback<MouseEnterEvent>(_ =>
+                  {
+                        GameObject[] selectedObjects = Selection.gameObjects;
+
+                        if (selectedObjects is { Length: > 0 })
+                        {
+                              Vector3 currentSpacing = Vector3.right * 2f;
+                              onPreview?.Invoke(selectedObjects, currentSpacing);
+                        }
+                  });
+                  btn.RegisterCallback<MouseLeaveEvent>(static _ => PreviewService.CancelPreview());
+
+                  return btn;
+            }
+
+            private static Button CreateRotationPreviewButton(string text, string tooltip, Action onClick, Action<IReadOnlyList<GameObject>> onPreview)
+            {
+                  var btn = new Button(onClick)
+                  {
+                              text = text,
+                              tooltip = tooltip + " (Hover to preview)",
+                              style = { flexGrow = 1, marginLeft = 1, marginRight = 1 }
+                  };
+
+                  btn.RegisterCallback<MouseEnterEvent>(_ =>
+                  {
+                        GameObject[] selectedObjects = Selection.gameObjects;
+
+                        if (selectedObjects is { Length: > 0 })
+                        {
+                              onPreview?.Invoke(selectedObjects);
+                        }
+                  });
+                  btn.RegisterCallback<MouseLeaveEvent>(static _ => PreviewService.CancelPreview());
 
                   return btn;
             }

@@ -4,9 +4,9 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace OpalStudio.SceneManipulator
+namespace OpalStudio.SceneManipulator.Editor
 {
-      public class SelectionManager
+      public sealed class SelectionManager
       {
             public IReadOnlyList<GameObject> SelectedObjects => _selectedObjects;
             private List<GameObject> _selectedObjects = new();

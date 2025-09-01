@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace OpalStudio.SceneManipulator.Services
+namespace OpalStudio.SceneManipulator.Editor.Services
 {
       public static class RotationService
       {

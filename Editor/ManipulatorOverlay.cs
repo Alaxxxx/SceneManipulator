@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using OpalStudio.SceneManipulator.Editor.Services;
 using UnityEditor;
 using UnityEditor.Overlays;
 using UnityEngine;
 using UnityEngine.UIElements;
-using OpalStudio.SceneManipulator.Services;
 
-namespace OpalStudio.SceneManipulator
+namespace OpalStudio.SceneManipulator.Editor
 {
       [Overlay(typeof(SceneView), "Manipulator", true)]
       public class ManipulatorOverlay : Overlay
@@ -34,45 +34,178 @@ namespace OpalStudio.SceneManipulator
             {
                   string info = MeasurementService.GetMeasurementInfo(selectedObjects);
                   _ui.UpdateMeasurementInfo(info);
+
+                  if (VisualizationService.ShowDistanceGizmos)
+                  {
+                        VisualizationService.UpdateConnections(selectedObjects);
+                  }
+
+                  PreviewService.CancelPreview();
             }
 
             private void SubscribeToUIEvents()
             {
-                  // Positioning
-                  _ui.OnSetPositionClicked += (pos) => PositioningService.SetPosition(_selectionManager.SelectedObjects, pos);
-                  _ui.OnCenterClicked += () => PositioningService.CenterObjects(_selectionManager.SelectedObjects);
-                  _ui.OnSnapToGroundClicked += () => PositioningService.SnapToGround(_selectionManager.SelectedObjects);
-                  _ui.OnMoveToOriginClicked += () => PositioningService.MoveToOrigin(_selectionManager.SelectedObjects);
+                  _ui.OnSetPositionClicked += pos =>
+                  {
+                        PreviewService.CancelPreview();
+                        PositioningService.SetPosition(_selectionManager.SelectedObjects, pos);
+                  };
 
-                  // Alignment
-                  _ui.OnAlignClicked += (axis, target) => AlignmentService.AlignObjects(_selectionManager.SelectedObjects, axis, target);
+                  _ui.OnCenterClicked += () =>
+                  {
+                        PreviewService.CancelPreview();
+                        PositioningService.CenterObjects(_selectionManager.SelectedObjects);
+                  };
 
-                  // Rotation
-                  _ui.OnSetRotationClicked += (rot) => RotationService.SetRotation(_selectionManager.SelectedObjects, rot);
-                  _ui.OnResetRotationClicked += () => RotationService.ResetRotation(_selectionManager.SelectedObjects);
-                  _ui.OnAddRotationClicked += (add) => RotationService.AddRotation(_selectionManager.SelectedObjects, add);
-                  _ui.OnRandomizeYRotationClicked += () => RotationService.RandomizeRotation(_selectionManager.SelectedObjects, Vector3.zero, new Vector3(0, 360, 0));
+                  _ui.OnSnapToGroundClicked += () =>
+                  {
+                        PreviewService.CancelPreview();
+                        PositioningService.SnapToGround(_selectionManager.SelectedObjects);
+                  };
 
-                  // Arrangement
-                  _ui.OnSpacingChanged += (spacing) => _spacing = spacing;
-                  _ui.OnArrangeInLineClicked += (dir) => ArrangementService.ArrangeInLine(_selectionManager.SelectedObjects, dir, _spacing.magnitude);
-                  _ui.OnArrangeInGridClicked += () => ArrangementService.ArrangeInGrid(_selectionManager.SelectedObjects, _spacing);
-                  _ui.OnArrangeInCircleClicked += () => ArrangementService.ArrangeInCircle(_selectionManager.SelectedObjects, _spacing.magnitude);
-                  _ui.OnArrangeRandomlyClicked += () => ArrangementService.ArrangeRandomly(_selectionManager.SelectedObjects, _spacing.magnitude);
+                  _ui.OnMoveToOriginClicked += () =>
+                  {
+                        PreviewService.CancelPreview();
+                        PositioningService.MoveToOrigin(_selectionManager.SelectedObjects);
+                  };
 
-                  // Utilities
-                  _ui.OnDuplicateClicked += () => UtilityService.DuplicateSelected(_selectionManager.SelectedObjects);
+                  _ui.OnAlignClicked += (axis, target) =>
+                  {
+                        PreviewService.CancelPreview();
+                        AlignmentService.AlignObjects(_selectionManager.SelectedObjects, axis, target);
+                  };
+
+                  _ui.OnSetRotationClicked += rot =>
+                  {
+                        PreviewService.CancelPreview();
+                        RotationService.SetRotation(_selectionManager.SelectedObjects, rot);
+                  };
+
+                  _ui.OnResetRotationClicked += () =>
+                  {
+                        PreviewService.CancelPreview();
+                        RotationService.ResetRotation(_selectionManager.SelectedObjects);
+                  };
+
+                  _ui.OnAddRotationClicked += add =>
+                  {
+                        PreviewService.CancelPreview();
+                        RotationService.AddRotation(_selectionManager.SelectedObjects, add);
+                  };
+
+                  _ui.OnRandomizeYRotationClicked += () =>
+                  {
+                        PreviewService.CancelPreview();
+                        RotationService.RandomizeRotation(_selectionManager.SelectedObjects, Vector3.zero, new Vector3(0, 360, 0));
+                  };
+
+                  _ui.OnSpacingChanged += spacing =>
+                  {
+                        _spacing = spacing;
+
+                        PreviewService.CancelPreview();
+                  };
+
+                  _ui.OnArrangeInLineClicked += dir =>
+                  {
+                        PreviewService.CancelPreview();
+                        ArrangementService.ArrangeInLine(_selectionManager.SelectedObjects, dir, _spacing.magnitude);
+                        UpdateVisualizationAfterChange();
+                  };
+
+                  _ui.OnArrangeInGridClicked += () =>
+                  {
+                        PreviewService.CancelPreview();
+                        ArrangementService.ArrangeInGrid(_selectionManager.SelectedObjects, _spacing);
+                        UpdateVisualizationAfterChange();
+                  };
+
+                  _ui.OnArrangeInCircleClicked += () =>
+                  {
+                        PreviewService.CancelPreview();
+                        ArrangementService.ArrangeInCircle(_selectionManager.SelectedObjects, _spacing.magnitude);
+                        UpdateVisualizationAfterChange();
+                  };
+
+                  _ui.OnArrangeRandomlyClicked += () =>
+                  {
+                        PreviewService.CancelPreview();
+                        ArrangementService.ArrangeRandomly(_selectionManager.SelectedObjects, _spacing.magnitude);
+                        UpdateVisualizationAfterChange();
+                  };
+
+                  _ui.OnSnapToGroundAdvancedClicked += alignToNormal =>
+                  {
+                        PreviewService.CancelPreview();
+                        SnapService.SnapToGround(_selectionManager.SelectedObjects, 100f, alignToNormal);
+                        UpdateVisualizationAfterChange();
+                  };
+
+                  _ui.OnSnapToBoundsClicked += (direction, snapToSurface) =>
+                  {
+                        PreviewService.CancelPreview();
+                        SnapService.SnapToBounds(_selectionManager.SelectedObjects, direction, snapToSurface);
+                        UpdateVisualizationAfterChange();
+                  };
+
+                  _ui.OnSnapToGridClicked += gridSize =>
+                  {
+                        PreviewService.CancelPreview();
+                        SnapService.SnapToGrid(_selectionManager.SelectedObjects, gridSize);
+                        UpdateVisualizationAfterChange();
+                  };
+
+                  _ui.OnSnapBetweenClicked += () =>
+                  {
+                        PreviewService.CancelPreview();
+                        SnapService.SnapBetweenObjects(_selectionManager.SelectedObjects);
+                        UpdateVisualizationAfterChange();
+                  };
+
+                  _ui.OnStackObjectsClicked += padding =>
+                  {
+                        PreviewService.CancelPreview();
+                        SnapService.StackObjects(_selectionManager.SelectedObjects, padding);
+                        UpdateVisualizationAfterChange();
+                  };
+
+                  _ui.OnDuplicateClicked += () =>
+                  {
+                        PreviewService.CancelPreview();
+                        UtilityService.DuplicateSelected(_selectionManager.SelectedObjects);
+                  };
 
                   _ui.OnDeleteClicked += () =>
                   {
+                        PreviewService.CancelPreview();
                         UtilityService.DeleteSelected(_selectionManager.SelectedObjects);
                         _selectionManager.Clear();
+                        VisualizationService.ClearConnections();
                   };
-                  _ui.OnGroupClicked += () => UtilityService.GroupSelected(_selectionManager.SelectedObjects);
+
+                  _ui.OnGroupClicked += () =>
+                  {
+                        PreviewService.CancelPreview();
+                        UtilityService.GroupSelected(_selectionManager.SelectedObjects);
+                  };
+            }
+
+            private void UpdateVisualizationAfterChange()
+            {
+                  string info = MeasurementService.GetMeasurementInfo(_selectionManager.SelectedObjects);
+                  _ui.UpdateMeasurementInfo(info);
+
+                  if (VisualizationService.ShowDistanceGizmos)
+                  {
+                        VisualizationService.UpdateConnections(_selectionManager.SelectedObjects);
+                  }
             }
 
             public override void OnWillBeDestroyed()
             {
+                  PreviewService.CancelPreview();
+                  VisualizationService.ClearConnections();
+
                   if (_selectionManager != null)
                   {
                         _selectionManager.OnSelectionChanged -= HandleSelectionChanged;
