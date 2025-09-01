@@ -40,29 +40,6 @@ namespace OpalStudio.SceneManipulator.Editor.Services
                   }
             }
 
-            public static void SnapToGround(IReadOnlyList<GameObject> selectedObjects)
-            {
-                  if (selectedObjects.Count == 0)
-                  {
-                        return;
-                  }
-
-                  Undo.RecordObjects(selectedObjects.Select(static go => go.transform).ToArray<Object>(), "Snap to Ground");
-
-                  foreach (GameObject obj in selectedObjects)
-                  {
-                        if (Physics.Raycast(obj.transform.position + Vector3.up * 100, Vector3.down, out RaycastHit hit))
-                        {
-                              obj.transform.position = hit.point;
-                        }
-                        else
-                        {
-                              Vector3 position = obj.transform.position;
-                              obj.transform.position = new Vector3(position.x, 0, position.z);
-                        }
-                  }
-            }
-
             public static void MoveToOrigin(IReadOnlyList<GameObject> selectedObjects)
             {
                   if (selectedObjects.Count == 0)

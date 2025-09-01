@@ -12,7 +12,6 @@ namespace OpalStudio.SceneManipulator.Editor
             // Events for Positioning
             public event Action<Vector3> OnSetPositionClicked;
             public event Action OnCenterClicked;
-            public event Action OnSnapToGroundClicked;
             public event Action OnMoveToOriginClicked;
 
             // Events for alignment
@@ -33,9 +32,8 @@ namespace OpalStudio.SceneManipulator.Editor
 
             // Events for Snapping
             public event Action<bool> OnSnapToGroundAdvancedClicked;
-            public event Action<SnapService.SnapDirection, bool> OnSnapToBoundsClicked;
+            public event Action<SnapService.SnapDirection> OnSnapToBoundsClicked;
             public event Action<float> OnSnapToGridClicked;
-            public event Action OnSnapBetweenClicked;
             public event Action<float> OnStackObjectsClicked;
 
             // Events for Utilities
@@ -81,7 +79,7 @@ namespace OpalStudio.SceneManipulator.Editor
 
                   VisualElement quickPosRow = CreateButtonRow();
                   quickPosRow.Add(CreateButton("Center", "Move the center of the selection to the world origin", () => OnCenterClicked?.Invoke()));
-                  quickPosRow.Add(CreateButton("Ground", "Snap objects to the nearest surface below", () => OnSnapToGroundClicked?.Invoke()));
+                  quickPosRow.Add(CreateButton("Ground", "Snap objects to the nearest surface below", () => OnSnapToGroundAdvancedClicked?.Invoke(false)));
                   quickPosRow.Add(CreateButton("Origin", "Move all selected objects to (0,0,0)", () => OnMoveToOriginClicked?.Invoke()));
                   section.Add(quickPosRow);
             }
@@ -202,67 +200,41 @@ namespace OpalStudio.SceneManipulator.Editor
                   Foldout section = CreateSectionFoldout("Snap", false);
                   _root.Add(section);
 
+                  // --- Snap to Ground ---
                   VisualElement groundRow = CreateButtonRow();
-
-                  groundRow.Add(CreateButton("Ground", "Snap objects to ground below (takes object height into account)",
-                              () => OnSnapToGroundAdvancedClicked?.Invoke(false)));
+                  groundRow.Add(CreateButton("Ground", "Snap objects to ground below", () => OnSnapToGroundAdvancedClicked?.Invoke(false)));
                   groundRow.Add(CreateButton("Ground+Align", "Snap to ground and align to surface normal", () => OnSnapToGroundAdvancedClicked?.Invoke(true)));
                   section.Add(groundRow);
 
+                  // --- Snap to Grid ---
                   VisualElement gridRow = CreateButtonRow();
-
-                  var gridField = new FloatField("Grid Size")
-                  {
-                              value = 1f, tooltip = "Grid size for snapping (1 = 1 unity unit)",
-                              style =
-                              {
-                                          flexGrow = 1
-                              }
-                  };
+                  var gridField = new FloatField("Grid Size") { value = 1f, tooltip = "Grid size for snapping", style = { flexGrow = 1 } };
                   gridRow.Add(gridField);
                   gridRow.Add(CreateButton("Snap", "Snap positions to grid points", () => OnSnapToGridClicked?.Invoke(gridField.value)));
                   section.Add(gridRow);
 
-                  var boundsLabel = new Label("Snap to Bounds (First = Reference):") { style = { marginTop = 5, fontSize = 11 } };
+                  // --- Snap to Selection ---
+                  var boundsLabel = new Label("Snap to First Selected Object:") { style = { marginTop = 8, fontSize = 11 } };
                   section.Add(boundsLabel);
 
                   VisualElement boundsRow1 = CreateButtonRow();
-                  boundsRow1.Add(CreateButton("↓", "Snap below reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Down, false)));
-                  boundsRow1.Add(CreateButton("↑", "Snap above reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Up, false)));
-                  boundsRow1.Add(CreateButton("←", "Snap to left of reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Left, false)));
-                  boundsRow1.Add(CreateButton("→", "Snap to right of reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Right, false)));
+                  boundsRow1.Add(CreateButton("↓ Down", "Snap below reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Down)));
+                  boundsRow1.Add(CreateButton("↑ Up", "Snap above reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Up)));
+                  boundsRow1.Add(CreateButton("← Left", "Snap to left of reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Left)));
+                  boundsRow1.Add(CreateButton("→ Right", "Snap to right of reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Right)));
                   section.Add(boundsRow1);
 
                   VisualElement boundsRow2 = CreateButtonRow();
-                  boundsRow2.Add(CreateButton("Forward", "Snap in front of reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Forward, false)));
-                  boundsRow2.Add(CreateButton("Back", "Snap behind reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Back, false)));
+                  boundsRow2.Add(CreateButton("Forward", "Snap in front of reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Forward)));
+                  boundsRow2.Add(CreateButton("Back", "Snap behind reference", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Back)));
                   section.Add(boundsRow2);
 
-                  var surfaceLabel = new Label("Snap to Surface (Touching):") { style = { marginTop = 5, fontSize = 11 } };
-                  section.Add(surfaceLabel);
-
-                  VisualElement surfaceRow = CreateButtonRow();
-                  surfaceRow.Add(CreateButton("↓ Touch", "Snap below with faces touching", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Down, true)));
-                  surfaceRow.Add(CreateButton("↑ Touch", "Snap above with faces touching", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Up, true)));
-
-                  surfaceRow.Add(CreateButton("→ Touch", "Snap to right with faces touching",
-                              () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Right, true)));
-                  surfaceRow.Add(CreateButton("← Touch", "Snap to left with faces touching", () => OnSnapToBoundsClicked?.Invoke(SnapService.SnapDirection.Left, true)));
-                  section.Add(surfaceRow);
-
+                  // --- Stack ---
                   VisualElement otherRow = CreateButtonRow();
-                  otherRow.Add(CreateButton("Between", "Place objects between first two selected (needs 3+ objects)", () => OnSnapBetweenClicked?.Invoke()));
-
-                  var stackField = new FloatField("Stack")
-                  {
-                              value = 0f, tooltip = "Stack objects vertically with padding",
-                              style =
-                              {
-                                          flexGrow = 0.7f
-                              }
-                  };
+                  otherRow.style.marginTop = 8;
+                  var stackField = new FloatField("Stack Padding") { value = 0f, tooltip = "Vertical padding between stacked objects", style = { flexGrow = 1 } };
                   otherRow.Add(stackField);
-                  otherRow.Add(CreateButton("Stack", "Stack selected objects (first = base)", () => OnStackObjectsClicked?.Invoke(stackField.value)));
+                  otherRow.Add(CreateButton("Stack", "Stack selected objects vertically (first = base)", () => OnStackObjectsClicked?.Invoke(stackField.value)));
                   section.Add(otherRow);
             }
 

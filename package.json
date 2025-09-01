@@ -1,0 +1,21 @@
+﻿{
+    "name": "com.opalstudio.scenemanipulator",
+    "version": "1.0.0",
+    "displayName": "SceneManipulator",
+    "description": "A Unity tool to manage and manipulate GameObjects in your scenes.",
+    "unity": "2021.3",
+    "documentationUrl": "https://github.com/Alaxxxx/SceneManipulator",
+    "licensesUrl": "https://github.com/Alaxxxx/SceneManipulator/blob/main/LICENSE",
+    "license": "MIT",
+    "author": {
+        "name": "Alaxxxx",
+        "email": "contact@opalstudio.fr"
+    },
+    "keywords": [
+        "unity",
+        "tool",
+        "scene",
+        "gameobject",
+        "editor"
+    ]
+}

@@ -57,12 +57,6 @@ namespace OpalStudio.SceneManipulator.Editor
                         PositioningService.CenterObjects(_selectionManager.SelectedObjects);
                   };
 
-                  _ui.OnSnapToGroundClicked += () =>
-                  {
-                        PreviewService.CancelPreview();
-                        PositioningService.SnapToGround(_selectionManager.SelectedObjects);
-                  };
-
                   _ui.OnMoveToOriginClicked += () =>
                   {
                         PreviewService.CancelPreview();
@@ -137,14 +131,14 @@ namespace OpalStudio.SceneManipulator.Editor
                   _ui.OnSnapToGroundAdvancedClicked += alignToNormal =>
                   {
                         PreviewService.CancelPreview();
-                        SnapService.SnapToGround(_selectionManager.SelectedObjects, 100f, alignToNormal);
+                        SnapService.SnapToGround(_selectionManager.SelectedObjects, alignToNormal);
                         UpdateVisualizationAfterChange();
                   };
 
-                  _ui.OnSnapToBoundsClicked += (direction, snapToSurface) =>
+                  _ui.OnSnapToBoundsClicked += direction =>
                   {
                         PreviewService.CancelPreview();
-                        SnapService.SnapToBounds(_selectionManager.SelectedObjects, direction, snapToSurface);
+                        SnapService.SnapToFirstSelected(_selectionManager.SelectedObjects, direction);
                         UpdateVisualizationAfterChange();
                   };
 
@@ -152,13 +146,6 @@ namespace OpalStudio.SceneManipulator.Editor
                   {
                         PreviewService.CancelPreview();
                         SnapService.SnapToGrid(_selectionManager.SelectedObjects, gridSize);
-                        UpdateVisualizationAfterChange();
-                  };
-
-                  _ui.OnSnapBetweenClicked += () =>
-                  {
-                        PreviewService.CancelPreview();
-                        SnapService.SnapBetweenObjects(_selectionManager.SelectedObjects);
                         UpdateVisualizationAfterChange();
                   };
 
